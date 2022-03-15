@@ -5,8 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -26,6 +29,8 @@ import (
 	_ "github.com/google/martian/stash"
 	_ "github.com/google/martian/status"
 )
+
+var globalvariable string
 
 // NewBackendFactory creates a proxy.BackendFactory with the martian request executor wrapping the injected one.
 // If there is any problem parsing the extra config data, it just uses the injected request executor.
@@ -60,7 +65,10 @@ func NewConfiguredBackendFactory(logger logging.Logger, ref func(*config.Backend
 // executed before and after the execution of the request
 func HTTPRequestExecutor(result *parse.Result, re client.HTTPRequestExecutor) client.HTTPRequestExecutor {
 	return func(ctx context.Context, req *http.Request) (resp *http.Response, err error) {
-		if err = modifyRequest(result.RequestModifier(), req); err != nil {
+		fmt.Println("\n ----> INTO HTTPRequestExecutor: ", req, resp)
+		// fmt.Println("\t\tglobalvariable:", globalvariable)
+
+		if err = modifyRequest(result.RequestModifier(), req, "REQ"); err != nil {
 			return
 		}
 
@@ -83,18 +91,64 @@ func HTTPRequestExecutor(result *parse.Result, re client.HTTPRequestExecutor) cl
 			}
 		}
 
+		// fmt.Println("\n ----> RESPONSE_)_): ", resp.Body)
+		// err = modifyRequest(result.RequestModifier(), req, "RES")
 		err = modifyResponse(result.ResponseModifier(), resp)
 		return
 	}
 }
 
-func modifyRequest(mod martian.RequestModifier, req *http.Request) error {
-	if req.Body == nil {
-		req.Body = ioutil.NopCloser(bytes.NewBufferString(""))
+// func fetchRequest(ctx context.Context, req *http.Request) {
+// 	mctx, ok := req.Context().(*Context)
+// 	if !ok || !mctx.SkippingRoundTrip() {
+// 		resp, err = re(ctx, req)
+// 		if err != nil {
+// 			return
+// 		}
+// 		if resp == nil {
+// 			err = ErrEmptyResponse
+// 			return
+// 		}
+// 	} else if resp == nil {
+// 		resp = &http.Response{
+// 			Request:    req,
+// 			Header:     http.Header{},
+// 			StatusCode: http.StatusOK,
+// 			Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+// 		}
+// 	}
+// }
+
+func toString(body io.Reader) string {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(body)
+	return buf.String()
+}
+
+func modifyRequest(mod martian.RequestModifier, req *http.Request, reqType string) error {
+	// b, err := httputil.DumpRequest(req, true)
+	c, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		fmt.Println("ERROR: ", err)
 	}
+	// fmt.Println("\n ----> REQUEST_0: ", reqType, string(b))
+	fmt.Println("\n ----> REQUEST_0: ", reqType, string(c))
+
+	fmt.Println("\n ----> REQUEST_globalvariable: ", globalvariable)
+	// fmt.Println("\n ----> REQUEST_globalvariable: ", toString(req.Body))
+	if globalvariable != "" {
+		req.Body = ioutil.NopCloser(bytes.NewBufferString(globalvariable))
+	}
+	// fmt.Println(string(b))
+
+	// if req.Body == nil {
+	// 	req.Body = ioutil.NopCloser(bytes.NewBufferString(""))
+	// }
 	if req.Header == nil {
 		req.Header = http.Header{}
 	}
+
+	// fmt.Println("91.1: REQUEST : BODY: ", toString(req.Body))
 
 	if mod == nil {
 		return nil
@@ -103,9 +157,22 @@ func modifyRequest(mod martian.RequestModifier, req *http.Request) error {
 }
 
 func modifyResponse(mod martian.ResponseModifier, resp *http.Response) error {
-	if resp.Body == nil {
-		resp.Body = ioutil.NopCloser(bytes.NewBufferString(""))
+	// b, err := httputil.DumpResponse(resp, true)
+	c, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		fmt.Println("ERROR: ", err)
 	}
+	fmt.Println("\n ----> RESPONSE_globalvariable: ", globalvariable)
+	// fmt.Println("\n ----> RESPONSE_0: ", string(b))
+	fmt.Println("\n ----> RESPONSE_0: ", string(c))
+
+	globalvariable = toString(resp.Body)
+	// body, err := ioutil.ReadAll(resp.Body)
+	// fmt.Println("\n ----> RESPONSE_0: ", string(body))
+
+	resp.Body = ioutil.NopCloser(bytes.NewBufferString(globalvariable))
+	// if resp.Body == nil {
+	// }
 	if resp.Header == nil {
 		resp.Header = http.Header{}
 	}

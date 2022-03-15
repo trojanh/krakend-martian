@@ -1,6 +1,7 @@
 package martian
 
 import (
+	"fmt"
 	"github.com/devopsfaith/krakend-martian/v2/register"
 	"github.com/google/martian/parse"
 )
@@ -10,6 +11,7 @@ import (
 func Register() {
 	for k, component := range register.Get() {
 		parse.Register(k, func(b []byte) (*parse.Result, error) {
+			fmt.Println("\tREGISTER: ", b)
 			v, err := component.NewFromJSON(b)
 			if err != nil {
 				return nil, err

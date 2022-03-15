@@ -16,13 +16,47 @@
         {
             "endpoint": "/supu",
             "method": "GET",
+            "extra_config": {
+                "proxy": {
+                    "sequential": true
+                }
+            },
             "backend": [
                 {
                     "method": "GET",
                     "host": [
-                        "https://api.github.com"
+                        "https://jsonplaceholder.typicode.com"
                     ],
-                    "url_pattern": "/users/devopsfaith",
+                    "url_pattern": "/posts/1",
+                    "extra_config": {
+                        "github.com/devopsfaith/krakend-martian": {
+                            "fifo.Group": {
+                                "scope": [
+                                    "request",
+                                    "response"
+                                ],
+                                "aggregateErrors": true,
+                                "modifiers1": [
+                                    {
+                                        "body.Modifier": {
+                                            "scope": [
+                                                "request",
+                                                "response"
+                                            ],
+                                            "body": "eyJtc2ciOiJ5b3Ugcm9jayEifQ=="
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "host": [
+                        "https://webhook.site"
+                    ],
+                    "method": "POST",
+                    "url_pattern": "/6f2ff6ba-a57e-4b54-9313-1c4691a510fb",
                     "extra_config": {
                         "github.com/devopsfaith/krakend-martian": {
                             "fifo.Group": {
@@ -33,12 +67,13 @@
                                 "aggregateErrors": true,
                                 "modifiers": [
                                     {
-                                        "body.Modifier": {
+                                        "header.Modifier": {
                                             "scope": [
                                                 "request",
                                                 "response"
                                             ],
-                                            "body": "eyJtc2ciOiJ5b3Ugcm9jayEifQ=="
+                                            "name": "Content-type",
+                                            "value": "application/json; charset=UTF-8"
                                         }
                                     }
                                 ]
@@ -67,6 +102,34 @@
                                 "explicitPaths": {
                                     "/": "/health.json"
                                 }
+                            }
+                        }
+                    }
+                },
+                {
+                    "host": [
+                        "https://en.gravatar.com"
+                    ],
+                    "url_pattern": "/rajan.json",
+                    "extra_config": {
+                        "github.com/devopsfaith/krakend-martian": {
+                            "fifo.Group": {
+                                "scope": [
+                                    "request",
+                                    "response"
+                                ],
+                                "aggregateErrors": true,
+                                "modifiers1": [
+                                    {
+                                        "body.Modifier": {
+                                            "scope": [
+                                                "request",
+                                                "response"
+                                            ],
+                                            "body": "eyJtc2ciOiJ5b3Ugcm9jayEifQ=="
+                                        }
+                                    }
+                                ]
                             }
                         }
                     }

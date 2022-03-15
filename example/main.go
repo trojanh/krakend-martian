@@ -20,7 +20,7 @@ import (
 
 func main() {
 	port := flag.Int("p", 0, "Port of the service")
-	debug := flag.Bool("d", false, "Enable the debug")
+	debug := flag.Bool("d", true, "Enable the debug")
 	configFile := flag.String("c", "/etc/krakend/configuration.json", "Path to the configuration filename")
 	flag.Parse()
 
